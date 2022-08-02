@@ -8,6 +8,8 @@ from google.cloud import bigquery
 from google.cloud.bigquery import Dataset
 from google.cloud.exceptions import NotFound
 from google.cloud.bigquery import DatasetReference
+from google.oauth2.service_account import Credentials
+
 
 logger = singer.get_logger()
 
@@ -30,7 +32,12 @@ def emit_state(state):
                 f.write("{}\n".format(line))
 
 
-def ensure_dataset(project_id, dataset_id, location):
+def get_client_from_credentials(creds_dict, project_id, location):
+    creds = Credentials.from_service_account_info(creds_dict)
+    return bigquery.Client(credentials=creds, project=project_id, location=location)
+
+
+def ensure_dataset(project_id, dataset_id, location, config):
     """
     Given a project id, dataset id and location, creates BigQuery dataset if not exists
 
@@ -42,7 +49,12 @@ def ensure_dataset(project_id, dataset_id, location):
     :return: client (BigQuery Client Object) and Dataset (BigQuery dataset)
     """
 
-    client = bigquery.Client(project=project_id, location=location)
+    if creds := config.get("service_credentials"):
+        client = get_client_from_credentials(project_id, location, creds)
+    # elif creds := config.get("web_credentials"):
+    #     client = get_client_from_web(project_id, location, creds)
+    else:
+        client = bigquery.Client(project=project_id, location=location)
 
     dataset_ref = DatasetReference(project_id, dataset_id)
 

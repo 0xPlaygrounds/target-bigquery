@@ -93,7 +93,7 @@ def main():
 
     tap_stream = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8")
 
-    client, dataset = ensure_dataset(project_id, dataset_id, location)
+    client, dataset = ensure_dataset(project_id, dataset_id, location, config)
 
     try:
         from target_bigquery.processhandler import LoadJobProcessHandler, PartialLoadJobProcessHandler, \
